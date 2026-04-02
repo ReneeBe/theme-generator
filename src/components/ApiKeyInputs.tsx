@@ -8,6 +8,15 @@ type Props = {
 };
 
 export default function ApiKeyInputs({ geminiApiKey, anthropicApiKey, workerUrl, onChange, expanded, onToggle }: Props) {
+  if (window.magiclink?.hasToken) {
+    return (
+      <div className="rounded-2xl border border-purple-500/20 bg-purple-500/8 px-4 py-3">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-purple-400/70">Demo mode active</p>
+        <p className="mt-0.5 text-xs text-white/30">You have 5 uses for this project — no API key needed.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-white/8 bg-white/3">
       <button

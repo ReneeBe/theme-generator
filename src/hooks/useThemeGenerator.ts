@@ -46,33 +46,48 @@ export function useThemeGenerator() {
     setError("");
 
     try {
-      const workerUrl = options.workerUrl?.trim() || DEFAULT_WORKER_URL;
+      let data: Record<string, unknown>;
 
-      const res = await fetch(workerUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description,
-          ...(options.geminiApiKey && { geminiApiKey: options.geminiApiKey }),
-          ...(options.anthropicApiKey && { anthropicApiKey: options.anthropicApiKey }),
-          ...(options.backgroundStyle && { backgroundStyle: options.backgroundStyle }),
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Generation failed");
+      if (window.magiclink?.hasToken) {
+        const token = localStorage.getItem("magiclink_token");
+        const res = await fetch("https://magiclink.reneebe.workers.dev/api/projects/theme-generator", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token,
+            description,
+            ...(options.backgroundStyle && { backgroundStyle: options.backgroundStyle }),
+          }),
+        });
+        const json = await res.json() as Record<string, unknown>;
+        if (!res.ok) throw new Error((json.error as string) || "Generation failed");
+        data = json.result as Record<string, unknown>;
+      } else {
+        const workerUrl = options.workerUrl?.trim() || DEFAULT_WORKER_URL;
+        const res = await fetch(workerUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description,
+            ...(options.geminiApiKey && { geminiApiKey: options.geminiApiKey }),
+            ...(options.anthropicApiKey && { anthropicApiKey: options.anthropicApiKey }),
+            ...(options.backgroundStyle && { backgroundStyle: options.backgroundStyle }),
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json() as Record<string, unknown>;
+          throw new Error((err.error as string) || "Generation failed");
+        }
+        data = await res.json() as Record<string, unknown>;
       }
 
-      const data = await res.json();
-
       // Support both old format (bare ThemeVars) and new format ({ vars, paletteImage })
-      const vars: ThemeVars = data.vars ?? data;
+      const vars: ThemeVars = (data.vars ?? data) as ThemeVars;
       vars["--font-heading"] = resolveFont(vars["--font-heading"]);
       vars["--font-body"] = resolveFont(vars["--font-body"]);
 
       setTheme(vars);
-      if (data.paletteImage) setPaletteImage(data.paletteImage);
+      if (data.paletteImage) setPaletteImage(data.paletteImage as { base64: string; mimeType: string });
       setStatus("success");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");

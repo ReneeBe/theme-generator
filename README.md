@@ -1,73 +1,27 @@
-# React + TypeScript + Vite
+# Theme Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A Vite/React UI for AI theme generation — describe a vibe, get a full UI theme. Day 4 of my [50 projects challenge](https://reneebe.github.io).
 
-Currently, two official plugins are available:
+**[Live demo →](https://reneebe.github.io/theme-generator)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## How it works
 
-## React Compiler
+1. Enter a description ("deep sea bioluminescence", "retro 80s arcade")
+2. Optionally add a site URL to preview the theme applied to a real page, and a background style hint
+3. The app calls the [nano-claude-theme-manager](https://github.com/ReneeBe/nano-claude-theme-manager) Cloudflare Worker (Day 3), which chains Gemini image generation + Claude vision to produce a `ThemeVars` JSON object
+4. The generated theme is previewed live and can be copied as JSON
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Stack
 
-## Expanding the ESLint configuration
+- [Vite](https://vite.dev/) + [React](https://react.dev/) + TypeScript
+- [Tailwind CSS v4](https://tailwindcss.com/)
+- [nano-claude-theme-manager](https://github.com/ReneeBe/nano-claude-theme-manager) — the Cloudflare Worker backend (you'll need your own deployment or API keys)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Running locally
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+You'll need a deployed instance of [nano-claude-theme-manager](https://github.com/ReneeBe/nano-claude-theme-manager) and its URL, plus Gemini and Anthropic API keys — enter them in the config panel in the app.

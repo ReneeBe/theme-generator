@@ -22,10 +22,4 @@ export type ThemeVars = {
   "--bg-pattern": string;
 };
 
-export type GeneratorConfig = {
-  geminiApiKey: string;
-  anthropicApiKey: string;
-  workerUrl: string;
-};
-
 export type GenerateStatus = "idle" | "loading" | "success" | "error";

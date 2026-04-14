@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useThemeGenerator } from "./hooks/useThemeGenerator";
-import ApiKeyInputs from "./components/ApiKeyInputs";
 import ThemeForm from "./components/ThemeForm";
 import ThemePreview from "./components/ThemePreview";
 import MockPreview from "./components/MockPreview";
@@ -9,22 +8,12 @@ export default function App() {
   const [description, setDescription] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [backgroundStyle, setBackgroundStyle] = useState("");
-  const [configOpen, setConfigOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [config, setConfig] = useState({
-    geminiApiKey: "",
-    anthropicApiKey: "",
-    workerUrl: "https://nano-claude-theme-manager.reneebe.workers.dev",
-  });
 
   const { status, theme, paletteImage, error, generate } = useThemeGenerator();
 
-  function handleConfigChange(field: "geminiApiKey" | "anthropicApiKey" | "workerUrl", value: string) {
-    setConfig((prev) => ({ ...prev, [field]: value }));
-  }
-
   function handleGenerate() {
-    generate(description, { ...config, siteUrl, backgroundStyle });
+    generate(description, { siteUrl, backgroundStyle });
   }
 
   function handleCopy() {
@@ -54,13 +43,6 @@ export default function App() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <ApiKeyInputs
-            {...config}
-            expanded={configOpen}
-            onToggle={() => setConfigOpen((v) => !v)}
-            onChange={handleConfigChange}
-          />
-
           <ThemeForm
             description={description}
             siteUrl={siteUrl}

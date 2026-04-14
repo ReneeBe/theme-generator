@@ -1,7 +1,7 @@
 import { useState } from "react";
-import type { ThemeVars, GeneratorConfig, GenerateStatus } from "../types/theme";
+import type { ThemeVars, GenerateStatus } from "../types/theme";
 
-const DEFAULT_WORKER_URL = "https://nano-claude-theme-manager.reneebe.workers.dev";
+const MAGICLINK_URL = "https://magiclink.reneebe.workers.dev/api/projects/theme-generator";
 
 const FONT_MAP: Record<string, string> = {
   serif: "'Lora', Georgia, serif",
@@ -27,7 +27,7 @@ function resolveFont(val: string): string {
   return FONT_MAP[val.trim().toLowerCase()] ?? val;
 }
 
-type GenerateOptions = Partial<GeneratorConfig> & {
+type GenerateOptions = {
   siteUrl?: string;
   backgroundStyle?: string;
 };
@@ -46,40 +46,19 @@ export function useThemeGenerator() {
     setError("");
 
     try {
-      let data: Record<string, unknown>;
-
-      if (window.magiclink?.hasToken) {
-        const token = localStorage.getItem("magiclink_token");
-        const res = await fetch("https://magiclink.reneebe.workers.dev/api/projects/theme-generator", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token,
-            description,
-            ...(options.backgroundStyle && { backgroundStyle: options.backgroundStyle }),
-          }),
-        });
-        const json = await res.json() as Record<string, unknown>;
-        if (!res.ok) throw new Error((json.error as string) || "Generation failed");
-        data = json.result as Record<string, unknown>;
-      } else {
-        const workerUrl = options.workerUrl?.trim() || DEFAULT_WORKER_URL;
-        const res = await fetch(workerUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            description,
-            ...(options.geminiApiKey && { geminiApiKey: options.geminiApiKey }),
-            ...(options.anthropicApiKey && { anthropicApiKey: options.anthropicApiKey }),
-            ...(options.backgroundStyle && { backgroundStyle: options.backgroundStyle }),
-          }),
-        });
-        if (!res.ok) {
-          const err = await res.json() as Record<string, unknown>;
-          throw new Error((err.error as string) || "Generation failed");
-        }
-        data = await res.json() as Record<string, unknown>;
-      }
+      const token = localStorage.getItem("magiclink_token");
+      const res = await fetch(MAGICLINK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(token && { token }),
+          description,
+          ...(options.backgroundStyle && { backgroundStyle: options.backgroundStyle }),
+        }),
+      });
+      const json = await res.json() as Record<string, unknown>;
+      if (!res.ok) throw new Error((json.error as string) || "Generation failed");
+      const data = (json.result ?? json) as Record<string, unknown>;
 
       // Support both old format (bare ThemeVars) and new format ({ vars, paletteImage })
       const vars: ThemeVars = (data.vars ?? data) as ThemeVars;

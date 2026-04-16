@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { ThemeVars, GenerateStatus } from "../types/theme";
 
-const MAGICLINK_URL = "https://magiclink.reneebe.workers.dev/api/projects/theme-generator";
+const MAGICLINK_CHECK_URL = "https://magiclink.reneebe.workers.dev/api/projects/theme-generator/check";
+const WORKER_URL = "https://nano-claude-theme-manager.reneebe.workers.dev";
 
 const FONT_MAP: Record<string, string> = {
   serif: "'Lora', Georgia, serif",
@@ -46,19 +47,28 @@ export function useThemeGenerator() {
     setError("");
 
     try {
+      // Step 1: Check access via MagicLink
       const token = localStorage.getItem("magiclink_token");
-      const res = await fetch(MAGICLINK_URL, {
+      const checkRes = await fetch(MAGICLINK_CHECK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(token ? { token } : {}),
+      });
+      const checkJson = await checkRes.json() as Record<string, unknown>;
+      if (!checkRes.ok) throw new Error((checkJson.error as string) || (checkJson.message as string) || "Access denied");
+
+      // Step 2: Call the theme worker directly
+      const res = await fetch(WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...(token && { token }),
           description,
           ...(options.backgroundStyle && { backgroundStyle: options.backgroundStyle }),
         }),
       });
       const json = await res.json() as Record<string, unknown>;
       if (!res.ok) throw new Error((json.error as string) || "Generation failed");
-      const data = (json.result ?? json) as Record<string, unknown>;
+      const data = json as Record<string, unknown>;
 
       // Support both old format (bare ThemeVars) and new format ({ vars, paletteImage })
       const vars: ThemeVars = (data.vars ?? data) as ThemeVars;
